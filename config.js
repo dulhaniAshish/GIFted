@@ -9,5 +9,7 @@ const config = {
     UTILS: {
         MAX_GIF_SIZE: 500 * 1000,
         DEBOUNCE_TIME: 500,
+        IDEAL_ASPECT_RATIO: 1.33,
+        TOLERANCE: 0.75,
     }
 };
