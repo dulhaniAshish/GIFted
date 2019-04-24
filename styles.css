@@ -1,13 +1,13 @@
 .gif_item {
-    margin: 5px;
     border: 1px solid #d9d9d9;
+    margin: 10px 2px 2px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    border-radius: 5px;
     -webkit-filter: brightness(50%);
     -webkit-transition: all 1s ease;
     -moz-transition: all 1s ease;
     -o-transition: all 1s ease;
     transition: all 1s ease;
+    min-height: 200px;
 }
 
 .gif_item:hover {
@@ -21,22 +21,25 @@
 html, body {
     width: 100%;
     height: 100%;
-    background: #e8eaf6;
+    display: flex;
+    flex-direction: column;
     -webkit-font-smoothing: antialiased;
 }
-.container {
-    display: block;
-    width: 70%;
-    margin: 50px;
+#container {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 20px;
+    margin-right: 20px;
     background: #fff;
-    height: 100vh;
 }
 .sw {
     float: left;
     width: 100%;
     height: 80px;
-    background: #533687;
-    padding: 15px;
+    background: #2384ff;
+    padding: 15px 45px;
     display: flex;
     align-items: center;
     box-shadow: 0 2px 0 0px rgba(0, 0, 0, .1);
@@ -63,15 +66,8 @@ html, body {
     font-size: medium;
     -webkit-appearance: none;
 }
-.sw .search:focus {
-    height: 80px;
-    margin-left: -15px;
-    padding: 10px 15px;
-}
+
 .sw .search:focus + .go {
-    height: 80px;
-    margin-right: -15px;
-    max-width: 80px;
     color: #533687;
 }
 
@@ -84,6 +80,7 @@ html, body {
     background: #fff;
     color: #ccc;
     height: 50px;
+    align-items: right;
     transition: all 0.05s ease-in-out;
     font-size: 21px;
     outline: none;
@@ -130,4 +127,28 @@ html, body {
         transform: scale(1);
     }
 }
+
+
+.shine {
+    background: #f6f7f8 linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%) no-repeat;
+    background-size: auto auto;
+    display: inline-block;
+    position: relative;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-fill-mode: forwards;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-name: placeholderShimmer;
+    -webkit-animation-timing-function: linear;
+}
+
+@-webkit-keyframes placeholderShimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
 

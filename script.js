@@ -1,12 +1,16 @@
 const input = document.querySelector('input.search');
 const container = document.querySelector('#container');
 const loader = document.querySelector('.loading');
-var fetching = false, maxLimitReached = false;
 
 const SearchState = new State('searchText');
 const Pagination = new State('pagination', 'int');
 const FetchState = new State('fetching', 'boolean');
 const LimitReachedState = new State('maxLimitForAPIReached', 'boolean');
+
+const SIZE_LIMIT = config.UTILS.MAX_GIF_SIZE; // bytes
+const DEBOUNCE_TIME = config.UTILS.DEBOUNCE_TIME; // ms
+const variants = ['fixed_height', 'fixed_width', 'original'];
+const modes = ['small', 'downsampled', ''];
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -36,26 +40,10 @@ function getDistFromBottom() {
 document.addEventListener('scroll', function () {
     const distToBottom = getDistFromBottom();
 
-    if (!LimitReachedState.getCurrentState().current && !FetchState.getCurrentState().current && distToBottom >= 0 && distToBottom <= (window.innerHeight*(3/4))) {
+    if (!LimitReachedState.getCurrentState().current && !FetchState.getCurrentState().current && distToBottom >= 0 && distToBottom <= (window.innerHeight * (3 / 4))) {
         searchForGIFs(SearchState.getCurrentState().current, Pagination.getCurrentState().current);
     }
 });
-
-const debounce = (func, delay) => {
-    let inDebounce;
-    return function () {
-        const context = this;
-        const args = arguments;
-        clearTimeout(inDebounce);
-        inDebounce = setTimeout(() => func.apply(context, args), delay)
-    }
-};
-
-
-const SIZE_LIMIT = config.UTILS.MAX_GIF_SIZE; // bytes
-const DEBOUNCE_TIME = config.UTILS.DEBOUNCE_TIME; // ms
-const variants = ['fixed_height', 'fixed_width', 'original'];
-const modes = ['small', 'downsampled', ''];
 
 window.onload = function () {
     searchForGIFs(SearchState.getCurrentState().current);
@@ -83,7 +71,6 @@ function searchForGIFs(text, offset = 0) {
     showLoader(true);
     APIRequest.SEARCH(text, offset)
         .then((response) => {
-            showLoader(false);
             const {data} = response;
             Pagination.changeState(Pagination.getCurrentState().current + Number.parseInt(response['pagination']['count']));
             const fragment = document.createDocumentFragment();
@@ -91,22 +78,36 @@ function searchForGIFs(text, offset = 0) {
             data.forEach((el) => {
                 const domImage = document.createElement('img');
                 domImage.classList.add('gif_item');
+                domImage.classList.add('shine');
                 const {title} = el;
                 const bestMatch = findAppropriateSize(el['images']);
                 domImage.setAttribute('title', title);
                 const previewAvailalble = el['images'].hasOwnProperty('preview_gif');
-                const selector = previewAvailalble ? 'fixed_height_still' : 'fixed_height_still';
+                const selector = previewAvailalble ? 'preview_gif' : 'fixed_height_still';
                 const stillUrl = el['images'][`${selector}`]['url'];
                 domImage.setAttribute('src', stillUrl);
+                domImage.setAttribute('id', el['id']);
+                const expectedWidth = `${el['images']['fixed_height']['width']}px`;
                 domImage.addEventListener('mouseover', () => {
                     domImage.setAttribute('src', el['images']['fixed_height']['url'])
                 });
                 domImage.addEventListener('mouseout', () => domImage.setAttribute('src', stillUrl));
+                domImage.addEventListener('load', () => {
+                    if (domImage.getAttribute('src') === stillUrl) {
+                        console.log('yes');
+                        domImage.classList.remove('shine');
+                    } else {
+                        console.log('final url loaded')
+                    }
+                });
                 domImage.style.height = '200px';
+                // console.log(title, selector, expectedWidth);
+                domImage.style.width = expectedWidth;
                 fragment.appendChild(domImage);
             });
             container.appendChild(fragment);
             console.timeEnd('add els');
+            showLoader(false);
         })
         .catch((err) => {
             console.warn('Error:', err);
@@ -115,38 +116,5 @@ function searchForGIFs(text, offset = 0) {
         })
 }
 
-
-const findAppropriateSize = (images, sizeLimit = SIZE_LIMIT) => {
-    let key = 'original';
-    let type = 'url';
-    let iterator = variants.length - 1;
-
-    while (iterator >= 0) {
-        let modeIterator = modes.length - 1;
-        let foundBestMatch = false;
-
-        while (modeIterator >= 0 && !foundBestMatch) {
-            const suffix = modes[modeIterator].length > 0 ? `_${modes[modeIterator]}` : '';
-            const k = `${variants[iterator]}${suffix}`;
-            if (images[k] && images[k]['webp_size'] <= sizeLimit) {
-                key = `${variants[iterator]}`;
-                type = 'webp';
-                foundBestMatch = true;
-            } else if (images[k] && images[k]['size'] <= sizeLimit) {
-                key = `${variants[iterator]}`;
-                type = 'normal';
-                foundBestMatch = true;
-            }
-            modeIterator--;
-        }
-
-        if (foundBestMatch) break;
-        iterator--;
-    }
-    return {
-        key,
-        type
-    };
-};
 
 
