@@ -73,6 +73,9 @@ function searchForGIFs(text, offset = 0) {
         .then((response) => {
             const {data} = response;
             Pagination.changeState(Pagination.getCurrentState().current + Number.parseInt(response['pagination']['count']));
+            if (Pagination.getCurrentState().current === Number.parseInt(response['pagination']['total_count'])) {
+                LimitReachedState.changeState(true);
+            }
             const fragment = document.createDocumentFragment();
             console.time('add els');
             data.forEach((el) => {
@@ -91,13 +94,15 @@ function searchForGIFs(text, offset = 0) {
                 domImage.addEventListener('mouseover', () => {
                     domImage.setAttribute('src', el['images']['fixed_height']['url'])
                 });
-                domImage.addEventListener('mouseout', () => domImage.setAttribute('src', stillUrl));
+                const addStillUrl = () => domImage.setAttribute('src', stillUrl)
+                domImage.addEventListener('mouseout', addStillUrl);
                 domImage.addEventListener('load', () => {
                     if (domImage.getAttribute('src') === stillUrl) {
                         console.log('yes');
                         domImage.classList.remove('shine');
                     } else {
-                        console.log('final url loaded')
+                        console.log('final url loaded');
+                        domImage.removeEventListener('mouseout', addStillUrl);
                     }
                 });
                 domImage.style.height = '200px';

@@ -36,6 +36,7 @@ function State(name, type = 'string') {
 function findBestPlacements(container, array) {
     const width = container.innerWidth;
     const res = [];
+    
 }
 
 const findAppropriateSize = (images, sizeLimit = SIZE_LIMIT) => {
