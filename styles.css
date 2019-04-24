@@ -15,12 +15,19 @@
 *, div {
     box-sizing: border-box;
 }
+
+/* for fast scrolling in safari */
+*:not(html) {
+    -webkit-transform: translate3d(0, 0, 0);
+}
+
 html, body {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     max-width: 100%;
+    margin: 0;
     -webkit-font-smoothing: antialiased;
 }
 #container {
@@ -47,7 +54,7 @@ html, body {
 .sw form {
     float: left;
     width: 100%;
-    height: 50px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
