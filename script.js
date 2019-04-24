@@ -1,6 +1,12 @@
 const input = document.querySelector('input.search');
 const container = document.querySelector('#container');
 const loader = document.querySelector('.loading');
+const modal = document.getElementById('myModal');
+const img = document.getElementById('myImg');
+const modalImg = document.getElementById("img01");
+const captionText = document.getElementById("caption");
+const span = document.getElementsByClassName("close")[0];
+
 
 const SearchState = new State('searchText');
 const Pagination = new State('pagination', 'int');
@@ -9,8 +15,6 @@ const LimitReachedState = new State('maxLimitForAPIReached', 'boolean');
 
 const SIZE_LIMIT = config.UTILS.MAX_GIF_SIZE; // bytes
 const DEBOUNCE_TIME = config.UTILS.DEBOUNCE_TIME; // ms
-const variants = ['fixed_height', 'fixed_width', 'original'];
-const modes = ['small', 'downsampled', ''];
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -39,7 +43,6 @@ function getDistFromBottom() {
 
 document.addEventListener('scroll', function () {
     const distToBottom = getDistFromBottom();
-
     if (!LimitReachedState.getCurrentState().current && !FetchState.getCurrentState().current && distToBottom >= 0 && distToBottom <= (window.innerHeight * (3 / 4))) {
         searchForGIFs(SearchState.getCurrentState().current, Pagination.getCurrentState().current);
     }
@@ -51,12 +54,16 @@ window.onload = function () {
 
 input.oninput = debounce(handleSearchQueryChange, DEBOUNCE_TIME);
 
+span.onclick = function () {
+    modal.style.display = "none";
+};
+
 function handleSearchQueryChange(event) {
     let value = event.target.value.trim();
     if (value !== SearchState.getCurrentState().current) {
 
         if (value.length === 0) {
-            value = "welcome";
+            value = "";
         }
         container.innerHTML = "";
         SearchState.changeState(value);
@@ -66,49 +73,59 @@ function handleSearchQueryChange(event) {
     }
 }
 
+function addPaginationOffset(count) {
+    Pagination.changeState(Pagination.getCurrentState().current + count);
+}
+
+function showModal() {
+    modal.style.display = "block";
+    modalImg.src = this.src;
+    captionText.innerHTML = this.title;
+}
+
 
 function searchForGIFs(text, offset = 0) {
     showLoader(true);
-    APIRequest.SEARCH(text, offset)
+    const fn = !!text ? APIRequest.SEARCH : APIRequest.TRENDING;
+    fn(text, offset)
         .then((response) => {
-            const {data} = response;
-            Pagination.changeState(Pagination.getCurrentState().current + Number.parseInt(response['pagination']['count']));
-            if (Pagination.getCurrentState().current === Number.parseInt(response['pagination']['total_count'])) {
+            const {data, pagination} = response;
+
+            const _modified = data.map((el) => {
+                const {title, id} = el;
+                const hasPreview = el['images'].hasOwnProperty('preview_gif');
+                const selector = hasPreview ? 'preview_gif' : 'fixed_height_still';
+                const stageOne = el['images'][`${selector}`];
+                const finalStage = el['images']['fixed_height'];
+                const bestMatch = findAppropriateSize(el['images']);
+
+                return {
+                    title,
+                    id,
+                    low: stageOne,
+                    high: finalStage,
+                }
+            });
+
+            return Promise.resolve({
+                data: _modified,
+                pagination,
+            });
+        })
+        .then((response) => {
+            const {data, pagination} = response;
+
+            addPaginationOffset(Number.parseInt(pagination['count']));
+
+            const totalCount = pagination['total_count'];
+
+            if (Pagination.getCurrentState().current === Number.parseInt(totalCount)) {
                 LimitReachedState.changeState(true);
             }
             const fragment = document.createDocumentFragment();
             console.time('add els');
             data.forEach((el) => {
-                const domImage = document.createElement('img');
-                domImage.classList.add('gif_item');
-                domImage.classList.add('shine');
-                const {title} = el;
-                const bestMatch = findAppropriateSize(el['images']);
-                domImage.setAttribute('title', title);
-                const previewAvailalble = el['images'].hasOwnProperty('preview_gif');
-                const selector = previewAvailalble ? 'preview_gif' : 'fixed_height_still';
-                const stillUrl = el['images'][`${selector}`]['url'];
-                domImage.setAttribute('src', stillUrl);
-                domImage.setAttribute('id', el['id']);
-                const expectedWidth = `${el['images']['fixed_height']['width']}px`;
-                domImage.addEventListener('mouseover', () => {
-                    domImage.setAttribute('src', el['images']['fixed_height']['url'])
-                });
-                const addStillUrl = () => domImage.setAttribute('src', stillUrl)
-                domImage.addEventListener('mouseout', addStillUrl);
-                domImage.addEventListener('load', () => {
-                    if (domImage.getAttribute('src') === stillUrl) {
-                        console.log('yes');
-                        domImage.classList.remove('shine');
-                    } else {
-                        console.log('final url loaded');
-                        domImage.removeEventListener('mouseout', addStillUrl);
-                    }
-                });
-                domImage.style.height = '200px';
-                // console.log(title, selector, expectedWidth);
-                domImage.style.width = expectedWidth;
-                fragment.appendChild(domImage);
+                fragment.appendChild(getImageDomElement(el));
             });
             container.appendChild(fragment);
             console.timeEnd('add els');
@@ -119,6 +136,46 @@ function searchForGIFs(text, offset = 0) {
             showLoader(false);
             LimitReachedState.changeState(true);
         })
+}
+
+function getImageDomElement(el) {
+    const domImage = document.createElement('img');
+
+    domImage.classList.add('gif_item');
+    domImage.classList.add('shine');
+
+    const {
+        title,
+        id,
+        low,
+        high
+    } = el;
+
+    domImage.setAttribute('title', title);
+    domImage.setAttribute('src', low['url']);
+    domImage.setAttribute('id', id);
+    domImage.style.display = 'flex';
+
+    const addActiveUrl = () => domImage.setAttribute('src', high['url']);
+
+    const addStillUrl = () => domImage.setAttribute('src', low['url']);
+
+    const expectedWidth = `${high['width']}px`;
+    domImage.addEventListener('mouseover', addActiveUrl);
+    domImage.addEventListener('mouseout', addStillUrl);
+
+    domImage.addEventListener('load', () => {
+        domImage.getAttribute('src') === low['url'] ?
+            domImage.classList.remove('shine') :    // remove shimmer
+            domImage.removeEventListener('mouseout', addStillUrl);  // best gif downloaded
+        // no need to revert to preview url on mouse out
+    });
+
+    domImage.onclick = showModal;
+    domImage.style.height = '200px';
+    domImage.style.width = expectedWidth;
+
+    return domImage;
 }
 
 
