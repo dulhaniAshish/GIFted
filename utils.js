@@ -1,10 +1,3 @@
-const initialValues = {
-    'int': 0,
-    'string': 'ryan renolds',
-    'object': {},
-    'boolean': false,
-};
-
 const defaultValues = {
     'int': 0,
     'string': '',
@@ -15,7 +8,7 @@ const defaultValues = {
 function State(name, type = 'string') {
     let currentState = {
         prev: defaultValues[type],
-        current: initialValues[type],
+        current: defaultValues[type],
     };
     this.name = name;
 
@@ -36,8 +29,11 @@ function State(name, type = 'string') {
 function findBestPlacements(container, array) {
     const width = container.innerWidth;
     const res = [];
-    
+
 }
+
+const variants = ['fixed_height', 'fixed_width', 'original'];
+const modes = ['small', 'downsampled', ''];
 
 const findAppropriateSize = (images, sizeLimit = SIZE_LIMIT) => {
     let key = 'original';
