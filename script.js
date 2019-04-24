@@ -13,7 +13,6 @@ const Pagination = new State('pagination', 'int');
 const FetchState = new State('fetching', 'boolean');
 const LimitReachedState = new State('maxLimitForAPIReached', 'boolean');
 
-const SIZE_LIMIT = config.UTILS.MAX_GIF_SIZE; // bytes
 const DEBOUNCE_TIME = config.UTILS.DEBOUNCE_TIME; // ms
 
 if ('serviceWorker' in navigator) {
@@ -95,8 +94,8 @@ function searchForGIFs(text, offset = 0) {
                 const {title, id} = el;
                 const hasPreview = el['images'].hasOwnProperty('preview_gif');
                 const selector = hasPreview ? 'preview_gif' : 'fixed_height_still';
-                const stageOne = el['images'][`${selector}`];
-                const finalStage = el['images']['fixed_height'];
+                const stageOne = el['images'][`${isMobile() ? selector : 'original'}`]; // for quickly loading
+                const finalStage = el['images'][`${isMobile() ? 'fixed_height' : 'original'}`];
                 const bestMatch = findAppropriateSize(el['images']);
 
                 return {
@@ -139,6 +138,7 @@ function searchForGIFs(text, offset = 0) {
 }
 
 function getImageDomElement(el) {
+    const divContainer = document.createElement('div');
     const domImage = document.createElement('img');
 
     domImage.classList.add('gif_item');
@@ -154,7 +154,7 @@ function getImageDomElement(el) {
     domImage.setAttribute('title', title);
     domImage.setAttribute('src', low['url']);
     domImage.setAttribute('id', id);
-    domImage.style.display = 'flex';
+    // domImage.style.display = 'flex';
 
     const addActiveUrl = () => domImage.setAttribute('src', high['url']);
 
@@ -165,17 +165,28 @@ function getImageDomElement(el) {
     domImage.addEventListener('mouseout', addStillUrl);
 
     domImage.addEventListener('load', () => {
-        domImage.getAttribute('src') === low['url'] ?
-            domImage.classList.remove('shine') :    // remove shimmer
+        const highResDownloaded = (domImage.getAttribute('src') === high['url']);
+        !highResDownloaded ?
+            domImage.classList.remove('s') :    // remove shimmer
             domImage.removeEventListener('mouseout', addStillUrl);  // best gif downloaded
-        // no need to revert to preview url on mouse out
+                        // no need to revert to preview url on mouse out
+        if (highResDownloaded) {
+            domImage.onclick = showModal;
+        }
     });
-
-    domImage.onclick = showModal;
     domImage.style.height = '200px';
-    domImage.style.width = expectedWidth;
+    const idealWidth = 200 * config.UTILS.IDEAL_ASPECT_RATIO;
+    const toleranceWidthMin = (config.UTILS.IDEAL_ASPECT_RATIO - config.UTILS.TOLERANCE) * 200;
+    const toleranceWidthMax = (config.UTILS.IDEAL_ASPECT_RATIO + config.UTILS.TOLERANCE) * 200;
+    const currentWidth = Number.parseInt(high['width']);
 
-    return domImage;
+    if (currentWidth <= toleranceWidthMax && currentWidth >= toleranceWidthMin) {
+        domImage.style.width = expectedWidth;
+    } else {
+        domImage.style.width = `${idealWidth}px`;
+    }
+    divContainer.appendChild(domImage);
+    return divContainer;
 }
 
 

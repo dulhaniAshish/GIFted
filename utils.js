@@ -35,6 +35,7 @@ function findBestPlacements(container, array) {
 const variants = ['fixed_height', 'fixed_width', 'original'];
 const modes = ['small', 'downsampled', ''];
 
+const SIZE_LIMIT = config.UTILS.MAX_GIF_SIZE; // bytes
 const findAppropriateSize = (images, sizeLimit = SIZE_LIMIT) => {
     let key = 'original';
     let type = 'url';
@@ -77,3 +78,5 @@ const debounce = (func, delay) => {
         inDebounce = setTimeout(() => func.apply(context, args), delay)
     }
 };
+
+const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent);
