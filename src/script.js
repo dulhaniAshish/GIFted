@@ -15,17 +15,7 @@ const LimitReachedState = new State('maxLimitForAPIReached', 'boolean');
 
 const DEBOUNCE_TIME = config.UTILS.DEBOUNCE_TIME; // ms
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(registration => {
-                console.log(`Service Worker registered! Scope: ${registration.scope}`);
-            })
-            .catch(err => {
-                console.log(`Service Worker registration failed: ${err}`);
-            });
-    });
-}
+addCachingMechanism();
 
 function showLoader(show) {
     FetchState.changeState(show);
@@ -96,7 +86,9 @@ function searchForGIFs(text, offset = 0) {
                 const selector = hasPreview ? 'preview_gif' : 'fixed_height_still';
                 const stageOne = el['images'][`${isMobile() ? selector : 'original'}`]; // for quickly loading
                 const finalStage = el['images'][`${isMobile() ? 'fixed_height' : 'original'}`];
-                const bestMatch = findAppropriateSize(el['images']);
+
+                // Find best size from low network cost perspective
+                // const bestMatch = findAppropriateSize(el['images']);
 
                 return {
                     title,
@@ -106,10 +98,10 @@ function searchForGIFs(text, offset = 0) {
                 }
             });
 
-            return Promise.resolve({
+            return {
                 data: _modified,
                 pagination,
-            });
+            };
         })
         .then((response) => {
             const {data, pagination} = response;
@@ -139,6 +131,7 @@ function searchForGIFs(text, offset = 0) {
 
 function getImageDomElement(el) {
     const divContainer = document.createElement('div');
+    divContainer.classList.add('gif_item_container');
     const domImage = document.createElement('img');
 
     domImage.classList.add('gif_item');
@@ -186,8 +179,16 @@ function getImageDomElement(el) {
         domImage.style.width = `${idealWidth}px`;
     }
     divContainer.appendChild(domImage);
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.innerHTML =
+        `
+            <button>
+                <span>Play</span>
+            </button>
+        `;
+    divContainer.appendChild(buttonContainer);
     return divContainer;
 }
-
 
 

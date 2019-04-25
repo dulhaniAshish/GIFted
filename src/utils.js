@@ -26,11 +26,6 @@ function State(name, type = 'string') {
     };
 }
 
-function findBestPlacements(container, array) {
-    const width = container.innerWidth;
-    const res = [];
-
-}
 
 const variants = ['fixed_height', 'fixed_width', 'original'];
 const modes = ['small', 'downsampled', ''];
@@ -78,5 +73,31 @@ const debounce = (func, delay) => {
         inDebounce = setTimeout(() => func.apply(context, args), delay)
     }
 };
+
+function addCachingMechanism() {
+    if (!config.UTILS.ENABLE_CACHING) return;
+    console.warn('Caching enabled! Data(gifs) May use up a lot of space');
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    getStorageEstimate();
+                    console.debug(`Service Worker registered! Scope: ${registration.scope}`);
+                })
+                .catch(err => {
+                    console.debug(`Service Worker registration failed: ${err}`);
+                });
+        });
+    }
+}
+
+function getStorageEstimate() {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+        navigator.storage.estimate()
+            .then(function(estimate){
+                console.debug(`Using ${estimate.usage} out of ${estimate.quota} bytes.`);
+            });
+    }
+}
 
 const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent);

@@ -1,3 +1,20 @@
+self.addEventListener('install', function(event) {
+    event.waitUntil(
+        caches.open('v1').then(function(cache) {
+            return cache.addAll([
+                '/GIFted/',
+                '/GIFted/index.html',
+                '/GIFted/styles.css',
+                '/GIFted/script.js',
+                '/GIFted/utils.js',
+                '/GIFted/config.js',
+                '/GIFted/network.js',
+            ]);
+        })
+    );
+});
+
+
 self.addEventListener('activate', (event) => {
     console.info('Event: Activate');
     event.waitUntil(
