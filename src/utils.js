@@ -100,4 +100,19 @@ function getStorageEstimate() {
     }
 }
 
+const getItemWidthRange = (baseHeight = config.UTILS.BASE_HEIGHT) => {
+    const idealWidth = baseHeight * config.UTILS.IDEAL_ASPECT_RATIO;
+    const toleranceWidthMin = (config.UTILS.IDEAL_ASPECT_RATIO - config.UTILS.TOLERANCE) * baseHeight;
+    const toleranceWidthMax = (config.UTILS.IDEAL_ASPECT_RATIO + config.UTILS.TOLERANCE) * baseHeight;
+
+    return {
+        min: toleranceWidthMin,
+        max: toleranceWidthMax,
+        ideal: idealWidth,
+    }
+};
+
 const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent);
+
+
+const perfLog = (label) => `Perf::${label}`;

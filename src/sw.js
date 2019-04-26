@@ -5,10 +5,10 @@ self.addEventListener('install', function(event) {
                 '/GIFted/',
                 '/GIFted/index.html',
                 '/GIFted/styles.css',
-                '/GIFted/script.js',
-                '/GIFted/utils.js',
-                '/GIFted/config.js',
-                '/GIFted/network.js',
+                '/GIFted/src/script.js',
+                '/GIFted/src/utils.js',
+                '/GIFted/src/config.js',
+                '/GIFted/src/network.js',
             ]);
         })
     );

@@ -13,5 +13,6 @@ const config = {
         IDEAL_ASPECT_RATIO: 1.33, // 4:3 is considered as good aspect ratio
         TOLERANCE: 0.75,    // tolerance value in aspect ratio
         ENABLE_CACHING: false,
+        BASE_HEIGHT: 200,
     }
 };
