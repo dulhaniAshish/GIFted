@@ -1,7 +1,7 @@
 const config = {
     GIPHY: {
         API_KEY: 'ef17xOMpGjjKRgTGUirrnLjQeXn8ylAQ',
-        HOST_URL: 'http://api.giphy.com',
+        HOST_URL: 'https://api.giphy.com',
         SEARCH_ENDPOINT: '/v1/gifs/search',
         TRENDING_ENDPOINT: '/v1/gifs/trending',
     },
