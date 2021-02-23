@@ -1,6 +1,6 @@
 const config = {
     GIPHY: {
-        API_KEY: 'CknscQ5UoDof2jEkiP2GDKsr56t4RQ5t',
+        API_KEY: 'ef17xOMpGjjKRgTGUirrnLjQeXn8ylAQ',
         HOST_URL: 'http://api.giphy.com',
         SEARCH_ENDPOINT: '/v1/gifs/search',
         TRENDING_ENDPOINT: '/v1/gifs/trending',
@@ -12,7 +12,8 @@ const config = {
         DEBOUNCE_TIME: 500, // debounce for search
         IDEAL_ASPECT_RATIO: 1.33, // 4:3 is considered as good aspect ratio
         TOLERANCE: 0.75,    // tolerance value in aspect ratio
-        ENABLE_CACHING: false,
+        ENABLE_CACHING: true,
         BASE_HEIGHT: 200,
+        ENABLE_LAZY_LOADING: true,
     }
 };

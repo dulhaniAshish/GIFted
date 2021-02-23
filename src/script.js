@@ -14,6 +14,7 @@ const FetchState = new State('fetching', 'boolean');
 const LimitReachedState = new State('maxLimitForAPIReached', 'boolean');
 
 const DEBOUNCE_TIME = config.UTILS.DEBOUNCE_TIME; // ms
+const ENABLE_LAZY_LOADING = config.UTILS.ENABLE_LAZY_LOADING;
 
 addCachingMechanism();
 
@@ -21,6 +22,12 @@ window.onload = function () {
     searchForGIFs(SearchState.getCurrentState().current);
     addSearchBarListener(input);
 };
+
+if (ENABLE_LAZY_LOADING) {
+    document.addEventListener("scroll", handleLazyLoading);
+    window.addEventListener("resize", handleLazyLoading);
+    window.addEventListener("orientationChange", handleLazyLoading);
+}
 
 function addSearchBarListener(HTMLElement) {
     HTMLElement.oninput = debounce(handleSearchQueryChange, DEBOUNCE_TIME);
@@ -129,6 +136,9 @@ function searchForGIFs(text, offset = 0) {
                 fragment.appendChild(getImageDomElement(el));
             });
             container.appendChild(fragment);
+            
+            if (ENABLE_LAZY_LOADING) handleLazyLoading();
+            
             console.timeEnd(perfLog('Time to add elements'));
             showLoader(false);
         })
@@ -156,9 +166,10 @@ function getImageDomElement(el) {
 
     domImage.classList.add('gif_item');
     domImage.classList.add('shine');
+    domImage.classList.add('lazy')
 
     domImage.setAttribute('title', title);
-    domImage.setAttribute('src', low['url']);
+    domImage.setAttribute('data-src', low['url']);
     domImage.setAttribute('id', id);
     domImage.style.height = '200px';
 
@@ -180,6 +191,35 @@ function getImageDomElement(el) {
 
 function getAppropriateWidth({max, min, ideal}, expected) {
     return (expected <= max && expected >= min) ? expected : ideal;
+}
+
+function handleLazyLoading() {
+    const lazyloadImages = document.querySelectorAll("img.lazy");  
+    var lazyloadThrottleTimeout;
+  
+    function lazyload () {
+        if(lazyloadThrottleTimeout) {
+        clearTimeout(lazyloadThrottleTimeout);
+        }    
+        
+        lazyloadThrottleTimeout = setTimeout(function() {
+            var scrollTop = window.pageYOffset;
+            lazyloadImages.forEach(function(img) {
+                if(img.offsetTop < (window.innerHeight + scrollTop)) {
+                img.src = img.dataset.src;
+                img.classList.remove('lazy');
+                }
+            });
+            
+            if(lazyloadImages.length == 0) { 
+                document.removeEventListener("scroll", lazyload);
+                window.removeEventListener("resize", lazyload);
+                window.removeEventListener("orientationChange", lazyload);
+            }
+        }, 20);
+    }
+
+    lazyload();
 }
 
 /**

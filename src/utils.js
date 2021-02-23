@@ -64,6 +64,7 @@ const findAppropriateSize = (images, sizeLimit = SIZE_LIMIT) => {
     };
 };
 
+// debounce for button clicks & other events
 const debounce = (func, delay) => {
     let inDebounce;
     return function () {
@@ -74,6 +75,8 @@ const debounce = (func, delay) => {
     }
 };
 
+// Add service worker for caching if allowed
+// for enabling OFFLINE FIRST feature
 function addCachingMechanism() {
     if (!config.UTILS.ENABLE_CACHING) return;
     console.warn('Caching enabled! Data(gifs) May use up a lot of space');
@@ -91,6 +94,7 @@ function addCachingMechanism() {
     }
 }
 
+// Get current Storage state of application
 function getStorageEstimate() {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
         navigator.storage.estimate()
@@ -100,6 +104,9 @@ function getStorageEstimate() {
     }
 }
 
+// Utility to estimate the best width for a gif
+// Conditioned by width that is to be rendered
+// and baseHeight set in Config
 const getItemWidthRange = (baseHeight = config.UTILS.BASE_HEIGHT) => {
     const idealWidth = baseHeight * config.UTILS.IDEAL_ASPECT_RATIO;
     const toleranceWidthMin = (config.UTILS.IDEAL_ASPECT_RATIO - config.UTILS.TOLERANCE) * baseHeight;
@@ -112,7 +119,8 @@ const getItemWidthRange = (baseHeight = config.UTILS.BASE_HEIGHT) => {
     }
 };
 
+// Check the type of agent requesting
 const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent);
 
-
+// For performance logging
 const perfLog = (label) => `Perf::${label}`;

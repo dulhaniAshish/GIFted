@@ -1,6 +1,8 @@
+/*
+    API Request daemon
+ */
 const APIRequest = (function gen() {
     const API_KEY = config.GIPHY.API_KEY;
-
     const HOST = config.GIPHY.HOST_URL;
     const BASE_URL = `${HOST}`;
 
